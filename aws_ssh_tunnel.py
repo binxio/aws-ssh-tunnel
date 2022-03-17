@@ -17,8 +17,8 @@ from time import sleep
 import boto3
 import click
 import paramiko
+import sshtunnel
 from configparser import ConfigParser
-from sshtunnel import open_tunnel
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 DEFAULT_CFG_FILE = os.path.join(__location__, "aws_ssh_tunnel.cfg")
@@ -57,7 +57,8 @@ def load_config(ctx, remote_host, port):
         ctx.obj["remote_host"] = remote_host
     else:
         click.echo(
-            'Unable to locate AWS environment variables, have you run "tunnel config"?'
+            "Unable to retrieve AWS environment variables,"
+            "have you set up the configuration file using 'aws-ssh-tunnel config'?"
         )
         sys.exit(1)
 
@@ -66,7 +67,7 @@ def generate_keyset():
     """
     Generates an ephemeral public-private key pair used to authenticate with the target instance.
     """
-    print("generating key pair for authentication with target instance...")
+    click.echo("generating key pair for authentication with target instance...")
     private_key = paramiko.RSAKey.generate(4096)
     public_key = f"{private_key.get_name()} {private_key.get_base64()}"
     return public_key, private_key
@@ -77,7 +78,7 @@ def prepare_instance_authentication(ctx, session, public_key):
     """
     Sends an ephemeral public key to the target instance used to authenticate the SSH session.
     """
-    print("sending public key to target instance...")
+    click.echo("sending public key to target instance...")
     client = session.client("ec2-instance-connect")
     return client.send_ssh_public_key(
         InstanceId=ctx.obj["instance_id"],
@@ -101,13 +102,13 @@ def set_target_instance_details(ctx, session):
         random_instance = random.choice(available_instances)
         instance_id = random_instance["InstanceId"]
         instance_az = random_instance["Placement"]["AvailabilityZone"]
-        print(
-            f"found jumpserver with id {instance_id} on availability zone {instance_az}..."
+        click.echo(
+            f"found instance with id {instance_id} on availability zone {instance_az}..."
         )
         ctx.obj["instance_id"] = instance_id
         ctx.obj["instance_az"] = instance_az
     else:
-        print(
+        click.echo(
             f"""
             No instances found with tag {ctx.obj["instance_tag"]}
             and profile {ctx.obj["aws_profile"]}
@@ -120,11 +121,12 @@ def set_target_instance_details(ctx, session):
 @click.pass_context
 def start_tunnel(ctx, private_key):
     """
-    Start a tunnel session.
+    Start a tunneling session.
     Can be a direct tunnel to the target EC2 instance or a tunnel to a second instance using a jump server.
     """
-    print(
-        f'starting tunnel on AWS SSM Session Manager to {ctx.obj["remote_host"]} on port {ctx.obj["port"]}...'
+    click.echo(
+        f'attempting to start tunnel on AWS SSM Session Manager to {ctx.obj["remote_host"]}'
+        'on port {ctx.obj["port"]}...'
     )
     proxy_command = f"""
     aws ssm start-session
@@ -135,7 +137,7 @@ def start_tunnel(ctx, private_key):
         --profile {ctx.obj['aws_profile']}
     """
     ssh_proxy = paramiko.ProxyCommand(proxy_command)
-    with open_tunnel(
+    with sshtunnel.open_tunnel(
         ssh_address_or_host=ctx.obj["instance_id"],
         ssh_proxy=ssh_proxy,
         ssh_username=ctx.obj["instance_user"],
@@ -146,7 +148,7 @@ def start_tunnel(ctx, private_key):
         # Needed in order to suppress a false positive error when ssh_pkey is loaded as a runtime variable.
         host_pkey_directories=[],
     ) as server:
-        print(
+        click.echo(
             f"tunnel complete, listening on port {server.local_bind_port}"
             " (press ctrl+c to close the connection)..."
         )
@@ -154,7 +156,7 @@ def start_tunnel(ctx, private_key):
             try:
                 sleep(1)
             except KeyboardInterrupt:
-                print("\nclosing connection...")
+                click.echo("\nclosing connection...")
                 break
 
 
@@ -205,7 +207,7 @@ def config():
 @main.command()
 @click.option(
     "--remote_host",
-    "-e",
+    "-r",
     type=str,
     help="Remote host to jump to from jump server."
     "Leave empty to directly tunnel to tagged instance",
@@ -230,7 +232,7 @@ def run(remote_host, port):
         prepare_instance_authentication(session, public_key)
         start_tunnel(private_key)
     except Exception as error:
-        print(f"Something went wrong during tunnel initialization: {error}")
+        click.echo(f"Something went wrong while executing the CLI: {error}")
 
 
 if __name__ == "__main__":
