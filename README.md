@@ -31,22 +31,32 @@ Supports SSH tunnels with instances in both public and private subnets, includin
 Clone the project:
 
 ```
-git clone placeholder
+git clone https://github.com/binxio/aws-ssh-tunnel.git
 ```
-Install dependencies:
+Install dependencies and set PATH variables:
 ```
-pip install .
+python3 -m pip install .
 ```
 That's it!
 
 ## Usage
+
 *Configuration*
 
 Set up your local config with `aws-ssh-tunnel config`.
-Fill in the prompted aws region, aws profile, target instance tag, and instance user that is used to establish an ssh tunnel on the target instance or jump server.
+You are prompted to fill in the following details:
+
+`aws_region`: the aws region in which your instances are located.
+
+`aws_profile`: the aws profile to use.
+
+`instance_user`: the user on the AWS target instance or jump server to authenticate the ssh session. For AWS AMIs, the default user is `ec2-user`. 
+
+`instance_tag`: the identifying tag of the target instance or jump server. If multiple instances are identified, a random one will be chosen.
 
 *CLI*
-Run the CLI with `aws-ssh-tunnel run --port <port to forward> (default: 80)  [--remote_host <remote host to establish tunnel to> (default: localhost)`. 
+
+Run the CLI with `aws-ssh-tunnel run --port <port to forward> (default: 80)  --remote_host <remote host to establish tunnel to> (default: localhost)`. 
 The CLI will automatically detect the jump server using the tag that is provided in the configuration.
 
 
