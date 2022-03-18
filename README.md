@@ -28,13 +28,15 @@ Supports SSH tunnels with instances in both public and private subnets, includin
 ```
 
 ## Installation
-Clone the project:
+Directly install with `pipx` or clone locally.
 
+*pipx*
+```
+pipx install aws-ssh-tunnel
+```
+*git clone*
 ```
 git clone https://github.com/binxio/aws-ssh-tunnel.git
-```
-Install dependencies and set PATH variables:
-```
 python3 -m pip install .
 ```
 
