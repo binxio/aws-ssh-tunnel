@@ -45,7 +45,7 @@ def get_aws_session(ctx):
 
 
 @click.pass_context
-def load_config(ctx, remote_host, port, tag):
+def load_config(ctx, remote_host, port, ssh_instance_tag):
     """
     Load the AWS environment variables from the configuration file as well as any additional parameters.
     """
@@ -54,8 +54,8 @@ def load_config(ctx, remote_host, port, tag):
         ctx.obj = dict(cfg["aws_environment"])
         ctx.obj["port"] = port
         ctx.obj["remote_host"] = remote_host
-        if tag is not None:
-            ctx.obj["ssh_instance_tag"] = tag
+        if ssh_instance_tag is not None:
+            ctx.obj["ssh_instance_tag"] = ssh_instance_tag
     else:
         click.echo(
             "Unable to retrieve AWS environment variables,"
@@ -232,7 +232,7 @@ def config():
     " in the local configuration file.",
     show_default="ssh_instance_tag environment variable in aws-ssh-tunnel.cfg",
 )
-def run(remote_host, port, tag):
+def run(remote_host, port, ssh_instance_tag):
     """
     Start the CLI.
 
@@ -244,7 +244,7 @@ def run(remote_host, port, tag):
         --ssh_instance_tag application=jump_server \n
     """
     try:
-        load_config(remote_host, port, tag)
+        load_config(remote_host, port, ssh_instance_tag)
         session = get_aws_session()
         set_target_instance_details(session)
         public_key, private_key = generate_keyset()
