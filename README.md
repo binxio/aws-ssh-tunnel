@@ -55,13 +55,11 @@ ssh_instance_tag: tag used to identify the (jump) instance that will be used to 
 ```
 *run*
 ```
-  aws-ssh-tunnel run
+Usage: aws-ssh-tunnel run [OPTIONS]
 
-      --remote_host mydb.123456789012.eu-west-1.rds.amazonaws.com
+  Start the CLI.
 
-      --port 5432
-
-      --ssh_instance_tag application=jump_server
+  Example: aws-ssh-tunnel run --remote_host mydb.123456789012.eu-west-1.rds.amazonaws.com --port 5432 --tag application=jump_server
 
 Options:
   -r, --remote_host TEXT       Remote host endpoint to to jump to. Omit or set
@@ -85,3 +83,4 @@ Options:
 ## TODO
 
 - Add support for tunnels to Fargate containers by integrating AWS ECS Exec sessions into the CLI. 
+
