@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="aws-ssh-tunnel",
-    version="0.1.1",
+    version="0.2.1",
     author="Daniel Molenaars",
     author_email="danielmolenaars@binx.io",
     description="CLI for port forwarding sessions with private AWS RDS and EC2 instances.",
