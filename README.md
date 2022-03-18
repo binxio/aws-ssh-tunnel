@@ -49,7 +49,8 @@ You are prompted to fill in the following details:
 ```
 aws_region: the aws region in which your instances are located.
 
-aws_profile: the aws profile to use.
+aws_profile: the aws profile to use. Should have the necessary IAM permissions to perform ec2-instance-connect:SendSSHPublicKey and ssm:StartSession.
+
 
 ssh_instance_user: user on the (jump) instance that will be used to set up the SSH session. For AWS AMIs, the default user is `ec2-user`.
 
