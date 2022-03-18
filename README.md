@@ -31,25 +31,55 @@ Supports SSH tunnels with instances in both public and private subnets, includin
 Clone the project:
 
 ```
-git clone placeholder
+git clone https://github.com/binxio/aws-ssh-tunnel.git
 ```
-Install dependencies:
+Install dependencies and set PATH variables:
 ```
-pip install .
+python3 -m pip install .
 ```
-That's it!
 
 ## Usage
-*Configuration*
+
+*config*
 
 Set up your local config with `aws-ssh-tunnel config`.
-Fill in the prompted aws region, aws profile, target instance tag, and instance user that is used to establish an ssh tunnel on the target instance or jump server.
+You are prompted to fill in the following details:
+```
+aws_region: the aws region in which your instances are located.
 
-*CLI*
-Run the CLI with `aws-ssh-tunnel run --port <port to forward> (default: 80)  [--remote_host <remote host to establish tunnel to> (default: localhost)`. 
-The CLI will automatically detect the jump server using the tag that is provided in the configuration.
+aws_profile: the aws profile to use.
 
+ssh_instance_user: user on the (jump) instance that will be used to set up the SSH session. For AWS AMIs, the default user is `ec2-user`.
 
+ssh_instance_tag: tag used to identify the (jump) instance that will be used to set up the SSH session. If multiple instances are identified, a random one will be chosen.
+```
+*run*
+```
+Usage: aws-ssh-tunnel run [OPTIONS]
+
+  Start the CLI.
+
+  Example: aws-ssh-tunnel run --remote_host mydb.123456789012.eu-west-1.rds.amazonaws.com --port 5432 --tag application=jump_server
+
+Options:
+  -r, --remote_host TEXT  Remote host endpoint to to jump to. Omit or set to
+                          'localhost' to set up a direct tunnel with the
+                          instance defined in '--tag'  [default: localhost]
+  -p, --port INTEGER      Listening port on the remote host. The same port
+                          will be opened on the local machine.  [default: 80]
+  -t, --tag TEXT          tag (format: KEY=VALUE) of the (jump) instance that
+                          will be used to set up the SSH session. If tunneling
+                          to RDS or services which only allow internal
+                          vpc traffic, pass the tag of a dedicated jump
+                          instance. Omit to use the ssh_instance_tag
+                          environment variable in the local configuration
+                          file.  [default: (ssh_instance_tag environment
+                          variable in aws-ssh-tunnel.cfg)]
+  --help                  Show this message and exit.
+```
+## TODO
+
+- Add support for tunnels to Fargate containers by integrating AWS ECS Exec sessions into the CLI. 
 
 
 
