@@ -59,6 +59,8 @@ Usage: aws-ssh-tunnel run [OPTIONS]
 
   Start the CLI.
 
+  Example: aws-ssh-tunnel run --remote_host mydb.123456789012.eu-west-1.rds.amazonaws.com --port 5432 --tag application=jump_server
+
 Options:
   -r, --remote_host TEXT  Remote host endpoint to to jump to. Omit or set to
                           'localhost' to set up a direct tunnel with the

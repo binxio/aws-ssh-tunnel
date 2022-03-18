@@ -223,7 +223,7 @@ def config():
     show_default=True,
 )
 @click.option(
-    "--tag",
+    "--ssh_instance_tag",
     "-t",
     type=str,
     help="tag (format: KEY=VALUE) of the (jump) instance that will be used to set up the SSH session."
@@ -235,6 +235,13 @@ def config():
 def run(remote_host, port, tag):
     """
     Start the CLI.
+
+    Example:
+
+    aws-ssh-tunnel run \n
+        --remote_host mydb.123456789012.eu-west-1.rds.amazonaws.com \n
+        --port 5432 \n
+        --ssh_instance_tag application=jump_server \n
     """
     try:
         load_config(remote_host, port, tag)
