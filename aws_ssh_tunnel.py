@@ -41,7 +41,7 @@ def common_options(function):
 @click.group()
 def main():
     """
-    Simple CLI tool that utilizes AWS SSM Session Manager to start an ssh tunnel to private AWS EC2 or RDS instances.
+    Simple CLI tool that utilizes AWS SSM Session Manager to set up SSH sessions with private AWS EC2 and RDS instances.
     """
     pass
 
@@ -177,7 +177,7 @@ def initialize_environment(tag, remote_host=None, port=None):
 @main.command()
 def config():
     """
-    Load AWS environment variables into the CLI configuration.
+    Set AWS configuration.
     """
     cfg.read(DEFAULT_CFG_FILE)
     aws_config = {}
@@ -232,7 +232,7 @@ def config():
 )
 def start_forwarding_session(tag, remote_host, port):
     """
-    Start a port forwarding session to the specified remote host.
+    Start a port forwarding session.
 
     Example:
 
@@ -259,7 +259,7 @@ def start_forwarding_session(tag, remote_host, port):
 @common_options
 def start_ssh_session(tag):
     """
-    Start an SSH session on the specified host.
+    Start an SSH session.
 
     Example:
 
