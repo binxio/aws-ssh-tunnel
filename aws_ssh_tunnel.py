@@ -96,14 +96,14 @@ def set_target_instance_details(ctx, session):
         ssh_instance_id = random_instance["InstanceId"]
         ssh_instance_az = random_instance["Placement"]["AvailabilityZone"]
         click.echo(
-            f"Found instance with tag {ctx.obj['tag']}"
+            f"Found instance with tag {ctx.obj['ssh_instance_tag']}"
             f" and id {ssh_instance_id} on availability zone {ssh_instance_az}..."
         )
         ctx.obj["ssh_instance_id"] = ssh_instance_id
         ctx.obj["ssh_instance_az"] = ssh_instance_az
     else:
         click.echo(
-            f"No instances found with tag {ctx.obj['tag']} and profile {ctx.obj['aws_profile']}"
+            f"No instances found with tag {ctx.obj['ssh_instance_tag']} and profile {ctx.obj['aws_profile']}"
             f" in region {ctx.obj['aws_region']}, exiting..."
         )
         sys.exit(1)
