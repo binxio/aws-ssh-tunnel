@@ -49,38 +49,61 @@ You are prompted to fill in the following details:
 ```
 aws_region: the aws region in which your instances are located.
 
-aws_profile: the aws profile to use.
+aws_profile: the aws profile to use. Should have the necessary IAM permissions to perform ec2-instance-connect:SendSSHPublicKey and ssm:StartSession.
 
-ssh_instance_user: user on the (jump) instance that will be used to set up the SSH session. For AWS AMIs, the default user is `ec2-user`.
-
-ssh_instance_tag: tag used to identify the (jump) instance that will be used to set up the SSH session. If multiple instances are identified, a random one will be chosen.
+ssh_instance_tag: tag used to identify the (jump) instance that will be used to set up the SSH session. If multiple instances are identified, a random one will be chosen. You can overwrite this variable by passing --tag to the session commands.
 ```
-*run*
+*port forwarding*
 ```
-Usage: aws-ssh-tunnel run [OPTIONS]
+Usage: aws_ssh_tunnel.py start-forwarding-session [OPTIONS]
 
-  Start the CLI.
+  Start a port forwarding session to the specified remote host.
 
-  Example: aws-ssh-tunnel run --remote_host mydb.123456789012.eu-west-1.rds.amazonaws.com --port 5432 --tag application=jump_server
+  Example:
+
+  aws-ssh-tunnel start-forwarding-session
+
+      --remote-host mydb.123456789012.eu-west-1.rds.amazonaws.com
+
+      --port 5432
+
+      --tag application=jump_server
 
 Options:
-  -r, --remote_host TEXT       Remote host endpoint to to jump to. Omit or set
-                               to 'localhost' to set up a direct tunnel with
-                               the instance defined in '--tag'  [default:
-                               localhost]
-  -p, --port INTEGER           Listening port on the remote host. The same
-                               port will be opened on the local machine.
-                               [default: 80]
-  -t, --ssh_instance_tag TEXT  tag (format: KEY=VALUE) of the (jump) instance
-                               that will be used to set up the SSH session. If
-                               tunneling to RDS or other services which only
-                               allow internal vpc traffic, pass the tag of a
-                               dedicated jump instance. Omit to use the
-                               ssh_instance_tag environment variable in the
-                               local configuration file.  [default:
-                               (ssh_instance_tag environment variable in aws-
-                               ssh-tunnel.cfg)]
-  --help                       Show this message and exit.
+  -t, --tag TEXT          tag (format: KEY=VALUE) of the (jump) instance that
+                          will be used to set up the SSH (tunneling) session.
+                          If tunneling to RDS or other services which only
+                          allow internal vpc traffic, pass the tag of a
+                          dedicated jump instance. Omit to use the tag
+                          environment variable in the local configuration
+                          file.  [default: (ssh_instance_tag environment
+                          variable in aws-ssh-tunnel.cfg)]
+  -r, --remote-host TEXT  Remote host endpoint to tunnel to.  [default:
+                          localhost]
+  -p, --port TEXT         The port on the remote host to forward traffic to.
+                          [default: 22]
+  --help                  Show this message and exit.
+```
+*ssh session*
+```
+Usage: aws_ssh_tunnel.py start-ssh-session [OPTIONS]
+
+  Start an SSH session on the specified host.
+
+  Example:
+
+  aws-ssh-tunnel start-ssh-session
+
+      -t application=jump_server
+
+Options:
+  -t, --tag TEXT  tag (format: KEY=VALUE) of the (jump) instance that will be
+                  used to set up the SSH (tunneling) session. If tunneling to
+                  RDS or other services which only allow internal vpc traffic,
+                  pass the tag of a dedicated jump instance. Omit to use the
+                  tag environment variable in the local configuration file.
+                  [default: (ssh_instance_tag environment variable in aws-ssh-tunnel.cfg)]
+  --help          Show this message and exit.
 ```
 ## TODO
 

@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="aws-ssh-tunnel",
-    version="0.2.3",
+    version="2.0.1",
     author="Daniel Molenaars",
     author_email="danielmolenaars@binx.io",
     description="CLI for port forwarding sessions with private AWS RDS and EC2 instances.",
@@ -15,8 +15,6 @@ setup(
     py_modules=["aws_ssh_tunnel"],
     install_requires=[
         "boto3",
-        "paramiko",
-        "sshtunnel",
         "click",
     ],
     entry_points={
