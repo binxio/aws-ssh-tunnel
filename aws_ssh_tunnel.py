@@ -109,12 +109,20 @@ def set_target_instance_details(ctx, session):
         sys.exit(1)
 
 
-def get_free_port():
+def get_port(requested_port):
     s = socket.socket()
-    s.bind(("", 0))
-    port = s.getsockname()[1]
-    s.close()
-    return port
+    try:
+        s.bind(("", int(requested_port)))
+        port = s.getsockname()[1]
+
+        return port
+
+    except socket.error:
+        click.echo(f"Unable to bind to local port '{requested_port}'. Is it in use?")
+        exit(1)
+
+    finally:
+        s.close()
 
 
 def execute_ssm_command(cmd):
@@ -230,7 +238,14 @@ def config():
     default=22,
     show_default=True,
 )
-def start_forwarding_session(tag, remote_host, port):
+@click.option(
+    "--local-port",
+    "-l",
+    type=str,
+    help="The port on the local host to route traffic to. If not provided it takes the value of the remote port. "
+         "Provide 0 to choose a random port.",
+)
+def start_forwarding_session(tag, remote_host, port, local_port):
     """
     Start a port forwarding session.
 
@@ -239,6 +254,7 @@ def start_forwarding_session(tag, remote_host, port):
     aws-ssh-tunnel start-forwarding-session \n
         --remote-host mydb.123456789012.eu-west-1.rds.amazonaws.com \n
         --port 5432 \n
+        --local-port 5432 \n
         --tag application=jump_server \n
     """
     try:
@@ -247,8 +263,11 @@ def start_forwarding_session(tag, remote_host, port):
             remote_host,
             port,
         )
-        local_port = get_free_port()
-        start_tunnel(local_port)
+        if not local_port:
+            local_port = port
+
+        _local_port = get_port(local_port)
+        start_tunnel(_local_port)
     except Exception as error:
         click.echo(
             f"Something went wrong when starting the port forwarding session: {error}"
