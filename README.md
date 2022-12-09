@@ -55,9 +55,9 @@ ssh_instance_tag: tag used to identify the (jump) instance that will be used to 
 ```
 *port forwarding*
 ```
-Usage: aws_ssh_tunnel.py start-forwarding-session [OPTIONS]
+Usage: aws-ssh-tunnel start-forwarding-session [OPTIONS]
 
-  Start a port forwarding session to the specified remote host.
+  Start a port forwarding session.
 
   Example:
 
@@ -66,6 +66,8 @@ Usage: aws_ssh_tunnel.py start-forwarding-session [OPTIONS]
       --remote-host mydb.123456789012.eu-west-1.rds.amazonaws.com
 
       --port 5432
+
+      --local-port 5432
 
       --tag application=jump_server
 
@@ -82,6 +84,9 @@ Options:
                           localhost]
   -p, --port TEXT         The port on the remote host to forward traffic to.
                           [default: 22]
+  -l, --local-port TEXT   The port on the local host to route traffic to. If
+                          not provided it takes the value of the remote port.
+                          Provide 0 to choose a random port.
   --help                  Show this message and exit.
 ```
 *ssh session*
