@@ -183,7 +183,18 @@ def initialize_environment(tag, remote_host=None, port=None):
 
 
 @main.command()
-def config():
+@common_options
+@click.option(
+    "--region",
+    type=str,
+    help="AWS region to use for tunneling session."
+)
+@click.option(
+    "--profile",
+    type=str,
+    help="AWS profile to assume for tunneling session."
+)
+def config(region, profile, tag):
     """
     Set AWS configuration.
     """
@@ -193,18 +204,28 @@ def config():
     if len(cfg) > 0 and "aws_environment" in cfg:
         aws_config = dict(cfg["aws_environment"])
 
-    aws_region = click.prompt(
-        "AWS region to use for tunneling session",
-        default=aws_config.get("aws_region"),
-    )
-    aws_profile = click.prompt(
-        "AWS profile to assume for tunneling session",
-        default=aws_config.get("aws_profile"),
-    )
-    tag = click.prompt(
-        "Tag used to identify the (jump) instance that will be used to set up the SSH session",
-        default=aws_config.get("ssh_instance_tag"),
-    )
+    if not region:
+        aws_region = click.prompt(
+            "AWS region to use for tunneling session",
+            default=aws_config.get("aws_region"),
+        )
+    else:
+        aws_region = region
+
+    if not profile:
+        aws_profile = click.prompt(
+            "AWS profile to assume for tunneling session",
+            default=aws_config.get("aws_profile"),
+        )
+    else:
+        aws_profile = profile
+
+    if not tag:
+        tag = click.prompt(
+            "Tag used to identify the (jump) instance that will be used to set up the SSH session",
+            default=aws_config.get("ssh_instance_tag"),
+        )
+
     aws_config = {
         **aws_config,
         **{
