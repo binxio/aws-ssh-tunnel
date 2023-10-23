@@ -53,6 +53,24 @@ aws_profile: the aws profile to use. Should have the necessary IAM permissions t
 
 ssh_instance_tag: tag used to identify the (jump) instance that will be used to set up the SSH session. If multiple instances are identified, a random one will be chosen. You can overwrite this variable by passing --tag to the session commands.
 ```
+Or you can use the following options:
+```
+Usage: aws_ssh_tunnel.py config [OPTIONS]
+
+  Set AWS configuration.
+
+Options:
+  -t, --tag TEXT  tag (format: KEY=VALUE) of the (jump) instance that will be
+                  used to set up the SSH (tunneling) session. If tunneling to
+                  RDS or other services which only allow internal vpc traffic,
+                  pass the tag of a dedicated jump instance. Omit to use the
+                  tag environment variable in the local configuration file.
+                  [default: (ssh_instance_tag environment variable in aws-ssh-
+                  tunnel.cfg)]
+  --region TEXT   AWS region to use for tunneling session.
+  --profile TEXT  AWS profile to assume for tunneling session.
+  --help          Show this message and exit.
+```
 *port forwarding*
 ```
 Usage: aws-ssh-tunnel start-forwarding-session [OPTIONS]
