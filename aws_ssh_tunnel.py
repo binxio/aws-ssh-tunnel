@@ -14,9 +14,11 @@ import random
 import socket
 import subprocess
 import sys
+from configparser import ConfigParser
+from typing import Any, Callable, Dict, Optional
+
 import boto3
 import click
-from configparser import ConfigParser
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 DEFAULT_CFG_FILE = os.path.join(__location__, "aws_ssh_tunnel.cfg")
@@ -24,7 +26,7 @@ RUNNING_STATE_CODE = 16
 cfg = ConfigParser()
 
 
-def common_options(function):
+def common_options(function: Callable) -> Callable:
     function = click.option(
         "--tag",
         "-t",
@@ -35,6 +37,19 @@ def common_options(function):
         " in the local configuration file.",
         show_default="ssh_instance_tag environment variable in aws-ssh-tunnel.cfg",
     )(function)
+
+    function = click.option(
+        "--profile",
+        type=str,
+        help="AWS profile to use when using aws-ssh-tunnel",
+    )(function)
+
+    function = click.option(
+        "--region",
+        type=str,
+        help="AWS region to use when using aws-ssh-tunnel",
+    )(function)
+
     return function
 
 
@@ -47,7 +62,7 @@ def main():
 
 
 @click.pass_context
-def get_aws_session(ctx):
+def get_aws_session(ctx: click.Context) -> boto3.Session:
     """
     Retrieve an AWS session using the region and profile in the configuration file.
     """
@@ -56,18 +71,13 @@ def get_aws_session(ctx):
     )
 
 
-@click.pass_context
-def load_config(ctx, tag, remote_host, port):
+def load_config() -> Dict[str, Any]:
     """
     Load the AWS environment variables from the configuration file as well as any additional parameters.
     """
     aws_config = cfg.read(DEFAULT_CFG_FILE)
     if len(aws_config) > 0 and "aws_environment" in cfg:
-        ctx.obj = dict(cfg["aws_environment"])
-        ctx.obj["port"] = port
-        ctx.obj["remote_host"] = remote_host
-        if tag is not None:
-            ctx.obj["ssh_instance_tag"] = tag
+        return dict(cfg["aws_environment"])
     else:
         click.echo(
             "Unable to retrieve AWS environment variables,"
@@ -77,7 +87,7 @@ def load_config(ctx, tag, remote_host, port):
 
 
 @click.pass_context
-def set_target_instance_details(ctx, session):
+def set_target_instance_details(ctx: click.Context, session: boto3.Session):
     """
     Retrieve the id and availability zone of the target instance using the provided tag.
     """
@@ -109,7 +119,7 @@ def set_target_instance_details(ctx, session):
         sys.exit(1)
 
 
-def get_port(requested_port):
+def get_port(requested_port: int) -> int:
     s = socket.socket()
     try:
         s.bind(("", int(requested_port)))
@@ -125,7 +135,7 @@ def get_port(requested_port):
         s.close()
 
 
-def execute_ssm_command(cmd):
+def execute_ssm_command(cmd: str):
     ssh_proc = subprocess.Popen(
         cmd,
         shell=True,
@@ -142,7 +152,7 @@ def execute_ssm_command(cmd):
 
 
 @click.pass_context
-def start_tunnel(ctx, local_port):
+def start_tunnel(ctx: click.Context, local_port: int):
     """
     Start a tunneling session.
     Can be a direct tunnel to the target EC2 instance or a tunnel to a second instance using a jump server.
@@ -162,22 +172,55 @@ def start_tunnel(ctx, local_port):
 
 
 @click.pass_context
-def start_session(ctx):
+def start_session(ctx: click.Context):
     """
     Start an ssh session.
     """
     click.echo(
         f"Attempting to start session on AWS SSM Session Manager to {ctx.obj['ssh_instance_id']}..."
     )
+
+    profile_option = (
+        "--profile " + ctx.obj["aws_profile"]
+        if ctx.obj["aws_profile"] is not None
+        else ""
+    )
+    region_option = (
+        "--region " + ctx.obj["aws_region"] if ctx.obj["aws_region"] is not None else ""
+    )
+
     cmd = f"aws ssm start-session \
          --target {ctx.obj['ssh_instance_id']} \
-         --profile {ctx.obj['aws_profile']} \
-         --region {ctx.obj['aws_region']}"
+            {profile_option} \
+            {region_option}"
     execute_ssm_command(cmd)
 
 
-def initialize_environment(tag, remote_host=None, port=None):
-    load_config(tag, remote_host, port)
+@click.pass_context
+def initialize_environment(
+    ctx: click.Context,
+    tag: Optional[str] = None,
+    profile: Optional[str] = None,
+    remote_host: Optional[str] = None,
+    port: Optional[int] = None,
+    region: Optional[str] = None,
+):
+    """Initializes the ctx object for the CLI. Config variables are overwritten if args are provided.
+    aws_profile and aws_region can also stay None if AWS environment variables are set
+    """
+    ctx.obj = {
+        "aws_profile": profile,
+        "aws_region": region,
+        "ssh_instance_tag": tag,
+        "remote_host": remote_host,
+        "port": port,
+    }
+
+    config_dict = load_config()
+    for key, value in config_dict.items():
+        if ctx.obj.get(key) is None:
+            ctx.obj.update({key: value})
+
     session = get_aws_session()
     set_target_instance_details(session)
 
@@ -208,9 +251,9 @@ def config():
     aws_config = {
         **aws_config,
         **{
-            "aws_region": aws_region,
-            "aws_profile": aws_profile,
-            "ssh_instance_tag": tag,
+            "aws_region": aws_region.lower(),
+            "aws_profile": aws_profile.lower(),
+            "ssh_instance_tag": tag.lower(),
         },
     }
 
@@ -243,9 +286,16 @@ def config():
     "-l",
     type=str,
     help="The port on the local host to route traffic to. If not provided it takes the value of the remote port. "
-         "Provide 0 to choose a random port.",
+    "Provide 0 to choose a random port.",
 )
-def start_forwarding_session(tag, remote_host, port, local_port):
+def start_forwarding_session(
+    remote_host: str,
+    port: int,
+    tag: Optional[str] = None,
+    local_port: Optional[int] = None,
+    profile: Optional[str] = None,
+    region: Optional[str] = None,
+):
     """
     Start a port forwarding session.
 
@@ -259,9 +309,7 @@ def start_forwarding_session(tag, remote_host, port, local_port):
     """
     try:
         initialize_environment(
-            tag,
-            remote_host,
-            port,
+            tag=tag, profile=profile, remote_host=remote_host, port=port, region=region
         )
         if not local_port:
             local_port = port
@@ -276,7 +324,11 @@ def start_forwarding_session(tag, remote_host, port, local_port):
 
 @main.command()
 @common_options
-def start_ssh_session(tag):
+def start_ssh_session(
+    tag: Optional[str] = None,
+    profile: Optional[str] = None,
+    region: Optional[str] = None,
+):
     """
     Start an SSH session.
 
@@ -286,7 +338,7 @@ def start_ssh_session(tag):
         -t application=jump_server \n
     """
     try:
-        initialize_environment(tag)
+        initialize_environment(tag=tag, profile=profile, region=region)
         start_session()
 
     except Exception as error:
