@@ -46,3 +46,4 @@ env.bak/
 venv.bak/
 *.cfg
 .idea/
+.vscode/
