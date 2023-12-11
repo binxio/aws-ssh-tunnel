@@ -47,3 +47,4 @@ venv.bak/
 *.cfg
 .idea/
 .vscode/
+*.py-e
