@@ -1,0 +1,4 @@
+release=2.2.1
+tag=2.2.1
+pre_tag_command=sed -i -e 's/version="[^"]*"/version="@@RELEASE@@"/' setup.py 
+
